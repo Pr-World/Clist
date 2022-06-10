@@ -16,6 +16,7 @@ list lcreate(const char* fmt, ...)
 {
 	const char* M_ERR="ERROR : COULD NOT ALLOCATE MEMORY FOR LIST\n";
 	va_list va;
+	va_start(va,fmt);
 	list lst;
 	lst.Lsize = 0;
 	lst.size = 0;
@@ -30,7 +31,6 @@ list lcreate(const char* fmt, ...)
 		printf("%s\n",M_ERR);
 		exit(10);
 	}
-	va_start(va,fmt);
 	void* vtmp;
 	for (int i = 0; i < strlen(fmt); ++i)
 	{
@@ -44,15 +44,16 @@ list lcreate(const char* fmt, ...)
 			exit(10);
 		}
 		strcpy(ftmp,lst.fmt);
-		vtmp = realloc(lst.fmt,lst.size);
-		if(vtmp==NULL){
+		lst.fmt = realloc(lst.fmt,lst.size);
+		if(lst.fmt==NULL){
 			free(ftmp);
 			free(lst.fmt);
 			free(lst.list);
 			printf("%s\n",M_ERR);
 			exit(10);
 		}
-		strcpy(lst.fmt,vtmp);
+		strcpy(lst.fmt,ftmp);
+		lst.fmt[lst.size-1]=fmt[i];
 		free(ftmp); // avoid memory leaks! \[o_X]/
 		if(fmt[i]=='i'||fmt[i]=='I')
 		{
@@ -70,8 +71,8 @@ list lcreate(const char* fmt, ...)
 			{
 				ltmp[i]=lst.list[i];
 			}
-			vtmp = realloc(lst.list,lst.Lsize);
-			if(vtmp==NULL){
+			lst.list = realloc(lst.list,lst.Lsize);
+			if(lst.list==NULL){
 				free(ltmp);
 				free(lst.fmt);
 				free(lst.list);
@@ -85,7 +86,6 @@ list lcreate(const char* fmt, ...)
 			free(ltmp); // Avoid memory leaks \[o_X]/
 			// integer to n-byte charachter conversion to store in lst
 			// where n is size of integer
-			lst.fmt[lst.size-1]='i';
 			int tmpp = va_arg(va,int);
 			int* tmp = &tmpp;
 			void* tmp2 = tmp;
@@ -113,8 +113,8 @@ list lcreate(const char* fmt, ...)
 			{
 				ltmp[i]=lst.list[i];
 			}
-			vtmp = realloc(lst.list,lst.Lsize);
-			if(vtmp==NULL){
+			lst.list = realloc(lst.list,lst.Lsize);
+			if(lst.list==NULL){
 				free(ltmp);
 				free(lst.fmt);
 				free(lst.list);
@@ -126,7 +126,6 @@ list lcreate(const char* fmt, ...)
 				lst.list[i]=ltmp[i];
 			}
 			free(ltmp); // Avoid memory leaks \[o_X]/
-			lst.fmt[lst.size-1]='c';
 			lst.list[lst.Lsize-1] = (char)va_arg(va,int);
 		}else if(fmt[i]=='s'||fmt[i]=='S'){
 			//first get the actual string!
@@ -146,8 +145,8 @@ list lcreate(const char* fmt, ...)
 			{
 				ltmp[i]=lst.list[i];
 			}
-			vtmp = realloc(lst.list,lst.Lsize);
-			if(vtmp==NULL){
+			lst.list = realloc(lst.list,lst.Lsize);
+			if(lst.list==NULL){
 				free(ltmp);
 				free(lst.fmt);
 				free(lst.list);
@@ -161,7 +160,6 @@ list lcreate(const char* fmt, ...)
 			free(ltmp); // Avoid memory leaks \[o_X]/
 			strncpy(lst.list+lst.Lsize-len-1,st,strlen(st));
 			lst.list[lst.Lsize-1] = '\0';
-			lst.fmt[lst.size-1]='s';
 		}else if(fmt[i]=='f'||fmt[i]=='F'){
 			// float are not accurate
 			// when converted from doule,
@@ -178,8 +176,8 @@ list lcreate(const char* fmt, ...)
 			{
 				ltmp[i]=lst.list[i];
 			}
-			vtmp = realloc(lst.list,lst.Lsize);
-			if(vtmp==NULL){
+			lst.list = realloc(lst.list,lst.Lsize);
+			if(lst.list==NULL){
 				free(ltmp);
 				free(lst.fmt);
 				free(lst.list);
@@ -216,8 +214,8 @@ list lcreate(const char* fmt, ...)
 			{
 				ltmp[i]=lst.list[i];
 			}
-			vtmp = realloc(lst.list,lst.Lsize);
-			if(vtmp==NULL){
+			lst.list = realloc(lst.list,lst.Lsize);
+			if(lst.list==NULL){
 				free(ltmp);
 				free(lst.fmt);
 				free(lst.list);
@@ -229,7 +227,7 @@ list lcreate(const char* fmt, ...)
 				lst.list[i]=ltmp[i];
 			}
 			free(ltmp); // Avoid memory leaks \[o_X]/
-			// double to n-byte conversion!
+			// double to 4-byte conversion!
 			lst.fmt[lst.size-1]='d';
 			double tmpp = va_arg(va,double);
 			double* tmp = &tmpp;
@@ -307,7 +305,6 @@ list lpush(list a, char type, ...)
 		{
 			lst.list[lst.Lsize-i]=cp[sizeof(int)-i];
 		}
-		lst.fmt[lst.size-1]='i';
 		return lst;
 	}else if(type=='s'||type=='S'){
 		char* s = va_arg(va,char*);
@@ -336,7 +333,6 @@ list lpush(list a, char type, ...)
 		free(a.fmt);
 		strncpy(lst.list+lst.Lsize-len-1,s,len);
 		lst.list[lst.Lsize-1]='\0';
-		lst.fmt[lst.size-1]='s';
 		return lst;
 	}else if(type=='d'||type=='D'){
 		lst.Lsize += sizeof(double);
@@ -368,7 +364,6 @@ list lpush(list a, char type, ...)
 		{
 			lst.list[lst.Lsize-i]=cp[sizeof(double)-i];
 		}
-		lst.fmt[lst.size-1]='d';
 		return lst;
 	}else if(type=='f'){
 		lst.Lsize += sizeof(double);
@@ -400,7 +395,6 @@ list lpush(list a, char type, ...)
 		{
 			lst.list[lst.Lsize-i]=cp[sizeof(double)-i];
 		}
-		lst.fmt[lst.size-1]='f';
 		return lst;
 	}else if(type=='c'){
 		lst.Lsize++;
@@ -426,7 +420,6 @@ list lpush(list a, char type, ...)
 		free(a.list);
 		free(a.fmt);
 		lst.list[lst.Lsize-1]=(char)va_arg(va,int);
-		lst.fmt[lst.size-1]='c';
 	}
 	return a;
 	va_end(va);

@@ -11,8 +11,7 @@ f = float [but is stored as double for precise value]
 
 int main()
 {
-	list a = lcreate("si","Prakash Niroula",896);
-	printf("Value in 0 index is of type: %c!\n",a.fmt[0]);
-
+	list a = lcreate("ss","Prakash Niroula","Prajwal Adhikari");
+	
 	return 0;
 }
